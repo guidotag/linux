@@ -53,6 +53,8 @@
 
 #include "internal.h"
 
+extern int logging_pid;
+
 #ifndef arch_mmap_check
 #define arch_mmap_check(addr, len, flags)	(0)
 #endif
@@ -1537,6 +1539,15 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
 	    ((vm_flags & VM_LOCKED) ||
 	     (flags & (MAP_POPULATE | MAP_NONBLOCK)) == MAP_POPULATE))
 		*populate = len;
+
+    /* Guido: Log VMA creation */
+    if (!IS_ERR_VALUE(addr)){
+        if (current->pid == logging_pid) {
+            printk("[EXTENTS] vma-create %lu %lu", addr, addr + len);
+            printk("[EXTENTS] flush");
+        }
+    }
+    
 	return addr;
 }
 
@@ -2789,6 +2800,12 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
 	/* Fix up all other VM information */
 	remove_vma_list(mm, vma);
 
+    /* Guido: Log VMA removal */
+    if (current->pid == logging_pid) {
+        printk("[EXTENTS] vma-remove %lu %lu", start, end);
+        printk("[EXTENTS] flush");
+    }
+
 	return 0;
 }
 
@@ -3012,12 +3029,21 @@ out:
 	if (flags & VM_LOCKED)
 		mm->locked_vm += (len >> PAGE_SHIFT);
 	vma->vm_flags |= VM_SOFTDIRTY;
+
 	return 0;
 }
 
 static int do_brk(unsigned long addr, unsigned long len, struct list_head *uf)
 {
-	return do_brk_flags(addr, len, 0, uf);
+    int ret = do_brk_flags(addr, len, 0, uf);
+    /* Guido: Log VMA creation */
+    if (ret == 0) {
+        if (current->pid == logging_pid) {
+            printk("[EXTENTS] vma-create %lu %lu", addr, addr + len);
+            printk("[EXTENTS] flush");
+        }
+    }
+    return ret;
 }
 
 int vm_brk_flags(unsigned long addr, unsigned long len, unsigned long flags)

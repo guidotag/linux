@@ -80,6 +80,8 @@
 
 #include "internal.h"
 
+extern int logging_pid;
+
 #if defined(LAST_CPUPID_NOT_IN_PAGE_FLAGS) && !defined(CONFIG_COMPILE_TEST)
 #warning Unfortunate NUMA and NUMA Balancing config, growing page-frame for last_cpupid.
 #endif
@@ -3093,7 +3095,7 @@ out_release:
 		put_page(swapcache);
 	}
 	return ret;
-}
+} 
 
 /*
  * We enter with non-exclusive mmap_sem (to exclude vma changes,
@@ -3919,6 +3921,12 @@ static int wp_huge_pud(struct vm_fault *vmf, pud_t orig_pud)
 static int handle_pte_fault(struct vm_fault *vmf)
 {
 	pte_t entry;
+
+	/* Guido: Log page fault */
+	if (current->pid == logging_pid) {
+		printk("[EXTENTS] page-map %lu", vmf->address);
+		printk("[EXTENTS] flush");
+	}
 
 	if (unlikely(pmd_none(*vmf->pmd))) {
 		/*
