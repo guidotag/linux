@@ -46,14 +46,14 @@
 #include <linux/pkeys.h>
 #include <linux/oom.h>
 
+#include <linux/logging.h>
+
 #include <linux/uaccess.h>
 #include <asm/cacheflush.h>
 #include <asm/tlb.h>
 #include <asm/mmu_context.h>
 
 #include "internal.h"
-
-extern int logging_pid;
 
 #ifndef arch_mmap_check
 #define arch_mmap_check(addr, len, flags)	(0)
@@ -1542,10 +1542,7 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
 
     /* Guido: Log VMA creation */
     if (!IS_ERR_VALUE(addr)){
-        if (current->pid == logging_pid) {
-            printk("[EXTENTS] vma-create %lu %lu", addr, addr + len);
-            printk("[EXTENTS] flush");
-        }
+        log_vma_create(current->token, addr, addr + len);
     }
     
 	return addr;
@@ -2801,10 +2798,7 @@ int do_munmap(struct mm_struct *mm, unsigned long start, size_t len,
 	remove_vma_list(mm, vma);
 
     /* Guido: Log VMA removal */
-    if (current->pid == logging_pid) {
-        printk("[EXTENTS] vma-remove %lu %lu", start, end);
-        printk("[EXTENTS] flush");
-    }
+    log_vma_remove(current->token, start, end);
 
 	return 0;
 }
@@ -3038,10 +3032,7 @@ static int do_brk(unsigned long addr, unsigned long len, struct list_head *uf)
     int ret = do_brk_flags(addr, len, 0, uf);
     /* Guido: Log VMA creation */
     if (ret == 0) {
-        if (current->pid == logging_pid) {
-            printk("[EXTENTS] vma-create %lu %lu", addr, addr + len);
-            printk("[EXTENTS] flush");
-        }
+        log_vma_create(current->token, addr, addr + len);
     }
     return ret;
 }
@@ -3139,6 +3130,9 @@ void exit_mmap(struct mm_struct *mm)
 	while (vma) {
 		if (vma->vm_flags & VM_ACCOUNT)
 			nr_accounted += vma_pages(vma);
+
+        /* Guido: Log VMA removal */
+        log_vma_remove(current->token, vma->vm_start, vma->vm_end);
 		vma = remove_vma(vma);
 	}
 	vm_unacct_memory(nr_accounted);

@@ -606,6 +606,11 @@ struct task_struct {
 	 */
 	randomized_struct_fields_start
 
+	/*
+	 * Guido: Add logging token
+	 */
+	int token;
+
 	void				*stack;
 	atomic_t			usage;
 	/* Per task flags (PF_*), defined further below: */

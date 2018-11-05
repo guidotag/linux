@@ -70,6 +70,8 @@
 #include <linux/dax.h>
 #include <linux/oom.h>
 
+#include <linux/logging.h>
+
 #include <asm/io.h>
 #include <asm/mmu_context.h>
 #include <asm/pgalloc.h>
@@ -79,8 +81,6 @@
 #include <asm/pgtable.h>
 
 #include "internal.h"
-
-extern int logging_pid;
 
 #if defined(LAST_CPUPID_NOT_IN_PAGE_FLAGS) && !defined(CONFIG_COMPILE_TEST)
 #warning Unfortunate NUMA and NUMA Balancing config, growing page-frame for last_cpupid.
@@ -3923,10 +3923,7 @@ static int handle_pte_fault(struct vm_fault *vmf)
 	pte_t entry;
 
 	/* Guido: Log page fault */
-	if (current->pid == logging_pid) {
-		printk("[EXTENTS] page-map %lu", vmf->address);
-		printk("[EXTENTS] flush");
-	}
+	log_page_fault(current->token, vmf->address);
 
 	if (unlikely(pmd_none(*vmf->pmd))) {
 		/*
