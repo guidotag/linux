@@ -16,21 +16,21 @@ asmlinkage long __x64_sys_unregister(void) {
 
 void log_vma_create(int token, unsigned long start, unsigned long end) {
     if (token == TOKEN) {
-        printk("[EXTENTS] vma-create %lu %lu", start, end);
-        printk("[EXTENTS] flush");
+        printk("XTNTS %d vc %lu %lu", current->pid, start, end);
+        // printk("XTNT flush");
     }
 }
 
 void log_vma_remove(int token, unsigned long start, unsigned long end) {
     if (token == TOKEN) {
-        printk("[EXTENTS] vma-remove %lu %lu", start, end);
-        printk("[EXTENTS] flush");
+        printk("XTNTS %d vr %lu %lu", current->pid, start, end);
+        // printk("XTNT flush");
     }
 }
 
-void log_page_fault(int token, unsigned long address) {
+void log_page_fault(int token, unsigned long virtual, unsigned long physical) {
     if (token == TOKEN) {
-        printk("[EXTENTS] page-map %lu", address);
-        printk("[EXTENTS] flush");
+        printk("XTNTS %d pf %lu %lu", current->pid, virtual, physical);
+        // printk("XTNT flush");
     }
 }

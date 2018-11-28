@@ -5,6 +5,6 @@
 
 void log_vma_create(int token, unsigned long start, unsigned long end);
 void log_vma_remove(int token, unsigned long start, unsigned long end);
-void log_page_fault(int token, unsigned long address);
+void log_page_fault(int token, unsigned long virtual, unsigned long physical);
 
 #endif

@@ -607,7 +607,7 @@ struct task_struct {
 	randomized_struct_fields_start
 
 	/*
-	 * Guido: Add logging token
+	 * Guido: Logging token
 	 */
 	int token;
 

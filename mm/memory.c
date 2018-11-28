@@ -3193,6 +3193,10 @@ static int do_anonymous_page(struct vm_fault *vmf)
 	page_add_new_anon_rmap(page, vma, vmf->address, false);
 	mem_cgroup_commit_charge(page, memcg, false, false);
 	lru_cache_add_active_or_unevictable(page, vma);
+
+	/* Guido: Log page fault */
+	log_page_fault(current->token, vmf->address, page_to_phys(page));
+
 setpte:
 	set_pte_at(vma->vm_mm, vmf->address, vmf->pte, entry);
 
@@ -3493,6 +3497,10 @@ int finish_fault(struct vm_fault *vmf)
 		ret = alloc_set_pte(vmf, vmf->memcg, page);
 	if (vmf->pte)
 		pte_unmap_unlock(vmf->pte, vmf->ptl);
+
+	/* Guido: Log page fault */
+	log_page_fault(current->token, vmf->address, page_to_phys(page));
+	
 	return ret;
 }
 
@@ -3921,9 +3929,6 @@ static int wp_huge_pud(struct vm_fault *vmf, pud_t orig_pud)
 static int handle_pte_fault(struct vm_fault *vmf)
 {
 	pte_t entry;
-
-	/* Guido: Log page fault */
-	log_page_fault(current->token, vmf->address);
 
 	if (unlikely(pmd_none(*vmf->pmd))) {
 		/*
